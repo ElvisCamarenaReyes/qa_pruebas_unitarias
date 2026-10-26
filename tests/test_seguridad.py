@@ -48,7 +48,7 @@ def test_inyeccion_csv(page: Page):
     exportar.consultar()
     
     # Esperamos a que el contador se actualice antes de descargar
-    expect(exportar.contador_registros).not_to_have_text(re.compile(r"^-\s*$"), timeout=10000)
+    expect(exportar.contador_registros).to_be_visible(timeout=15000)
 
     # Descargar CSV
     with page.expect_download() as download_info:

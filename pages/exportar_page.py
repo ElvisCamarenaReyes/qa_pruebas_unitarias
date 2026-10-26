@@ -1,34 +1,28 @@
 from playwright.sync_api import Page
-import re
 
 class ExportarPage:
     def __init__(self, page: Page):
         self.page = page
         self.url = "https://www.perucris.pe/exportar"
         
-        # --- SELECTORES ROBUSTOS Y ESTABLES ---
-        # Usamos atributos específicos encontrados en el HTML inspeccionado
+        # --- SELECTORES DE ENTRADA ---
         self.input_palabras = page.locator("textarea[maxlength='2000']")
-        
-        # Usamos los placeholders, que son únicos para cada año
         self.input_anio_inicio = page.locator("input[placeholder='Ej: 2024']")
         self.input_anio_fin = page.locator("input[placeholder='Ej: 2025']")
-        
-        # El tipo de ítem es el único input de texto con maxlength 150
         self.input_tipo_item = page.locator("input[maxlength='150']")
         
-        # Botones
+        # --- BOTONES ---
         self.btn_consultar = page.get_by_role("button", name="Consultar", exact=False)
         self.btn_descargar_json = page.get_by_role("button", name="DESCARGAR JSON", exact=False)
         self.btn_descargar_csv = page.get_by_role("button", name="DESCARGAR CSV", exact=False)
         
-        # El contador
-        self.contador_registros = page.get_by_text("TOTAL DE REGISTROS ENCONTRADOS").locator("..").locator("h3,h2, span, div").filter(has_text=re.compile(r"^\d+$")).first
+        # --- CONTADOR (LA SOLUCIÓN DEFINITIVA) ---
+        # Busca el texto "Total de registros encontrados" y luego selecciona el <h1> que está a su lado.
+        # El texto en el HTML real está en minúsculas y mezclado, usamos regex para no fallar.
+        self.contador_registros = page.locator("xpath=//h6[contains(translate(text(), 'TOTAL DE REGISTROS ENCONTRADOS', 'total de registros encontrados'), 'total de registros encontrados')]/following-sibling::h1")
 
     def navegar(self):
         self.page.goto(self.url, wait_until="networkidle")
-        
-        # Cerrar banner de cookies
         try:
             btn_cookies = self.page.get_by_role("button", name="Descartar todas")
             if btn_cookies.is_visible(timeout=3000):
